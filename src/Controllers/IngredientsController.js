@@ -2,13 +2,13 @@ const knex = require("../database/knex")
 
 class IngredientsController {
   async index(request, response) {
-    const { name } = request.query
-
+    const { name } = request.query;
+  
     const ingredients = await knex("ingredients")
       .select("dish_id")
-      .whereLike("name", `%${name}%`)
-
-    return response.json(ingredients)
+      .where("name", "like", `%${name}%`);
+  
+    return response.json(ingredients);
   }
 
   async show(request, response) {

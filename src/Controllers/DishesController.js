@@ -40,13 +40,13 @@ class DishesController {
   async show(request, response) {
     const { id } = request.params
 
-    const dish = await knex("dishes").where({ id }).orderBy("title");
+    const dish = await knex("dishes").where({ id }).orderBy("title").first();
     const ingredients = await knex("ingredients").where({ dish_id: id }).orderBy("name")
 
-    return response.json([
-      ...dish,
-      ingredients
-    ]);
+    return response.json({
+      dish: dish,
+      ingredients: ingredients,
+    });
   }
 
   async delete(request, response) {
@@ -72,15 +72,14 @@ class DishesController {
 
     if (title) {
       dishes = await knex("dishes")
-        .whereLike("dishes.title", `%${title}%`)
+        .where("dishes.title", "like", `%${title}%`)
+        .orWhereExists(function () {
+          this.select("*")
+            .from("ingredients")
+            .whereRaw("ingredients.dish_id = dishes.id")
+            .andWhere("ingredients.name", "like", `%${title}%`);
+        })
         .orderBy('title')
-
-      dishes.length !== 0 ?
-        dishes
-        :
-        dishes = await knex("dishes")
-          .whereLike("dishes.ingredients", `%${title}%`)
-
     } else {
       dishes = await knex('dishes').orderBy('favorited')
     }
